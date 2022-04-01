@@ -2,6 +2,7 @@ package com.example.demo.domain.item;
 
 import com.example.demo.domain.Category;
 import com.example.demo.domain.OrderItem;
+import com.example.demo.exception.NotEnoughStockException;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,7 +16,7 @@ import java.util.List;
 @Setter
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "dtype")
-public abstract class Item {
+public class Item {
 
     @Id @GeneratedValue
     @Column(name = "item_id")
@@ -30,5 +31,18 @@ public abstract class Item {
     @ManyToMany(mappedBy = "items")
     private List<Category> categories = new ArrayList<>();
 
+
+    //==비즈니스 로직==//
+    public void addStock(int quantity){
+        this.stockQuantity += quantity;
+    }
+
+    public void removeStock(int quantity){
+        int resultStock = this.stockQuantity - quantity;
+        if(resultStock<0){
+            throw new NotEnoughStockException("need More stock");
+        }
+        this.stockQuantity = resultStock;
+    }
 
 }
