@@ -1,12 +1,17 @@
 package com.example.demo.Repository;
 
+import com.example.demo.domain.Member;
 import com.example.demo.domain.Order;
 import lombok.RequiredArgsConstructor;
-import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
+import com.example.demo.domain.*;
 
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -23,19 +28,56 @@ public class OrderRepository {
         return em.find(Order.class, id);
     }
 
-/*    public List<Order> findAllByCriteria(OrderSearch orderSearch){
+    public List<Order> findAllByCriteria(OrderSearch orderSearch) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Order> cq = cb.createQuery(Order.class);
+        Root<Order> o = cq.from(Order.class);
+        Join<Order, Member> m = o.join("member", JoinType.INNER); //회원과 조인
+         List<Predicate> criteria = new ArrayList<>();
 
-    }*/
+        if (orderSearch.getOrderStatus() != null) {
+            Predicate status = cb.equal(o.get("status"), orderSearch.getOrderStatus());
+            criteria.add(status);
+        }
 
-/*
-    private List<Order> findAll(OrderSearch orderSearch){
+        if (StringUtils.hasText(orderSearch.getMemberName())) {
+            Predicate name = cb.like(m.<String>get("name"), "%" + orderSearch.getMemberName() + "%");
+            criteria.add(name);
+    }
+    cq.where(cb.and(criteria.toArray(new Predicate[criteria.size()])));
+    TypedQuery<Order> query = em.createQuery(cq).setMaxResults(1000); //최대 1000건
 
-        em.createQuery("select o from order o join o.member m"+
-                " where o.status = : status"+
-                "and m.name = :name", Order.class)
-                .setParameter("status", orderSearch.getOrderStatus())
-                .setParameter("name",orderSearch.getMemberName())
-                .setMaxResults(1000)
-                .getResultList();
-    }*/
+    return query.getResultList();
+}
+
+    public List<Order> findAllByString(OrderSearch orderSearch) {
+        String jpql = "select o From Order o join o.member m";
+        boolean isFirstCondition = true; //주문 상태 검색
+        if (orderSearch.getOrderStatus() != null) {
+            if (isFirstCondition) {
+                jpql += " where";             isFirstCondition = false;
+            } else {
+                jpql += " and";
+            }
+            jpql += " o.status = :status";
+        }
+
+        if (StringUtils.hasText(orderSearch.getMemberName())) {
+            if (isFirstCondition) {
+                jpql += " where";             isFirstCondition = false;
+            } else {
+                jpql += " and";
+            }
+            jpql += " m.name like :name";
+        }
+        TypedQuery<Order> query = em.createQuery(jpql, Order.class)
+                .setMaxResults(1000); //최대 1000건
+        if (orderSearch.getOrderStatus() != null) {
+            query = query.setParameter("status", orderSearch.getOrderStatus());
+        }
+        if (StringUtils.hasText(orderSearch.getMemberName())) {
+            query = query.setParameter("name", orderSearch.getMemberName());
+        }
+        return query.getResultList(); }
+
 }

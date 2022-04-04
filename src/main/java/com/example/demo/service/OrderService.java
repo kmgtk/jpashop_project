@@ -3,14 +3,13 @@ package com.example.demo.service;
 import com.example.demo.Repository.ItemRepository;
 import com.example.demo.Repository.MemberRepository;
 import com.example.demo.Repository.OrderRepository;
-import com.example.demo.domain.Delivery;
-import com.example.demo.domain.Member;
-import com.example.demo.domain.Order;
-import com.example.demo.domain.OrderItem;
+import com.example.demo.domain.*;
 import com.example.demo.domain.item.Item;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -52,10 +51,8 @@ public class OrderService {
 
     }
 
-
-
     //검색
-    /*public List<Order> findOrders(OrderSearch orderSearch){
-        return orderRepository.findAll(orderSearch);
-    }*/
+    public List<Order> findOrders(OrderSearch orderSearch){
+        return orderRepository.findAllByString(orderSearch);
+    }
 }
